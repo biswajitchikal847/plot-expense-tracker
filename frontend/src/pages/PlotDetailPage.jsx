@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, Loader2, Trash2, Plus, MapPin } from 'lucide-react';
+import { ChevronLeft, Loader2, Trash2, Plus, MapPin, FileDown } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import {
   Sheet,
@@ -36,6 +36,7 @@ import {
   getPlot,
   updateTransaction,
 } from '../services/api';
+import { exportPlotReport } from '../utils/pdfExport';
 import { formatINR, formatNumber } from '../utils/format';
 import { toast } from 'sonner';
 import { Wallet, TrendingDown, Receipt, Landmark } from 'lucide-react';
@@ -101,6 +102,19 @@ export default function PlotDetailPage() {
       await refreshAll();
     } catch (e) {
       toast.error('Failed to mark as paid');
+    }
+  };
+
+  const [exporting, setExporting] = useState(false);
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      await exportPlotReport(id);
+      toast.success('PDF exported');
+    } catch (e) {
+      toast.error('Failed to export PDF');
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -179,6 +193,19 @@ export default function PlotDetailPage() {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={handleExport}
+              disabled={exporting}
+              data-testid="plot-export-pdf"
+            >
+              {exporting ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <FileDown className="h-4 w-4 mr-2" />
+              )}
+              Export PDF
+            </Button>
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
               <SheetTrigger asChild>
                 <Button data-testid="add-transaction-button">

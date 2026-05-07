@@ -5,13 +5,33 @@ import { StatCard } from '../components/StatCard';
 import { PlotCard } from '../components/PlotCard';
 import { BreakdownPanel } from '../components/BreakdownPanel';
 import { Button } from '../components/ui/button';
-import { Plus, Wallet, TrendingDown, Banknote, Coins, Loader2 } from 'lucide-react';
+import { Plus, Wallet, TrendingDown, Banknote, Coins, Loader2, FileDown } from 'lucide-react';
+import { exportFullLedger } from '../utils/pdfExport';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 export default function DashboardPage() {
   const { plots, loading: plotsLoading, refresh: refreshPlots } = usePlots();
   const { summary, loading: summaryLoading } = useDashboard();
+  const [exporting, setExporting] = useState(false);
 
   const loading = plotsLoading || summaryLoading;
+
+  const handleExport = async () => {
+    if (plots.length === 0) {
+      toast.error('No data to export yet');
+      return;
+    }
+    setExporting(true);
+    try {
+      await exportFullLedger();
+      toast.success('PDF exported');
+    } catch (e) {
+      toast.error('Failed to export PDF');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-10">
@@ -30,11 +50,28 @@ export default function DashboardPage() {
             and bank-wise payments — all in one ledger.
           </p>
         </div>
-        <Link to="/plots/new" data-testid="dashboard-new-plot">
-          <Button size="lg" className="rounded-md">
-            <Plus className="h-4 w-4 mr-2" /> New Plot
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="lg"
+            className="rounded-md"
+            onClick={handleExport}
+            disabled={exporting || loading}
+            data-testid="dashboard-export-pdf"
+          >
+            {exporting ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <FileDown className="h-4 w-4 mr-2" />
+            )}
+            Export PDF
           </Button>
-        </Link>
+          <Link to="/plots/new" data-testid="dashboard-new-plot">
+            <Button size="lg" className="rounded-md">
+              <Plus className="h-4 w-4 mr-2" /> New Plot
+            </Button>
+          </Link>
+        </div>
       </section>
 
       {/* Summary stats */}
