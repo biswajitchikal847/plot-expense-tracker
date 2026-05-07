@@ -1,0 +1,82 @@
+{
+  "theme": "light",
+  "archetype": "Archetype 4 (Swiss & High-Contrast) tailored for Fintech with Organic & Earthy undertones",
+  "emotional_tone": "Trust, authority, precision, and grounded financial stability.",
+  "typography": {
+    "font_families": {
+      "headings": "'Cabinet Grotesk', sans-serif",
+      "body": "'Manrope', sans-serif",
+      "mono": "'JetBrains Mono', monospace"
+    },
+    "scale": {
+      "h1": "text-4xl sm:text-5xl tracking-tight font-bold",
+      "h2": "text-2xl sm:text-3xl tracking-tight font-semibold",
+      "h3": "text-xl sm:text-2xl tracking-tight font-medium",
+      "body": "text-base leading-relaxed",
+      "small_labels": "text-xs tracking-[0.2em] uppercase font-semibold text-muted-foreground"
+    }
+  },
+  "colors": {
+    "background": "#FAFAFA",
+    "surface": "#FFFFFF",
+    "primary": "#1E3A34",
+    "primary_foreground": "#FFFFFF",
+    "secondary": "#E5E7EB",
+    "secondary_foreground": "#111827",
+    "text_main": "#111827",
+    "text_muted": "#6B7280",
+    "border": "#E5E7EB",
+    "status": {
+      "paid_success": "#065F46",
+      "pending_warning": "#991B1B",
+      "cash_mode": "#D97706",
+      "online_mode": "#3730A3"
+    }
+  },
+  "spacing_and_layout": {
+    "dashboard_grid": "grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6",
+    "cards": "Flat background, 1px subtle border (border-border), rounded-lg, no shadow by default. Hover: -translate-y-1, shadow-sm.",
+    "internal_padding": "p-6 or p-8 for containers with borders.",
+    "alignment": "Optical alignment over geometrical. Left-align tables, dense content, and forms. Right-align monetary values in tables."
+  },
+  "surface_strategies": {
+    "header": "Solid background bg-white/90 backdrop-blur-xl border-b border-border/40 z-50 sticky top-0",
+    "widgets": "Flat solid surfaces. Avoid heavy glassmorphism for finance data to prevent visual refraction."
+  },
+  "component_rules": {
+    "buttons": "rounded-md font-medium transition-all hover:bg-primary/90 focus:ring-2 focus:ring-primary/20",
+    "tables": "Shadcn UI table, text-sm, left-aligned columns, right-aligned monetary amounts. Use monospaced font for numbers.",
+    "forms": "Shadcn Form components, labels uppercase tracking-wide, input fields flat with 1px border focus:ring-1 focus:ring-primary",
+    "modals": "Shadcn Dialog/Sheet, use Sheet for adding transactions (slides from right, feels more 'admin')."
+  },
+  "icons_and_assets": {
+    "library": "lucide-react",
+    "image_urls": [
+      {
+        "category": "dashboard_background_or_empty_state",
+        "url": "https://static.prod-images.emergentagent.com/jobs/011d3726-833a-4124-b3c4-313029a81a81/images/01bd42abaaf872d02eb23266ae80e9ba49bb54eb79557082417731cf5a29d2cf.png",
+        "description": "Clean minimalist abstract topographic map lines, light mode, subtle sage green and off-white. Use as a subtle watermark background for empty states, loaders, or login hero to ground the real-estate theme."
+      }
+    ]
+  },
+  "motion": {
+    "hover": "transition-all duration-200 ease-in-out",
+    "lists": "Staggered entrance animations for plot cards and table rows using Framer Motion."
+  },
+  "accessibility": {
+    "contrast": "Ensure 4.5:1 minimum contrast. Use text-shadow if placing text over the topographic image.",
+    "testing": "All interactive elements MUST have data-testid attributes (e.g., data-testid='add-transaction-button', data-testid='plot-card-1')."
+  },
+  "instructions_to_main_agent": [
+    "Use Vite + React + Tailwind + Firebase Firestore.",
+    "Implement Cabinet Grotesk for headings and Manrope for body text. Add JetBrains Mono for all currency/number displays to ensure tabular lining.",
+    "Format all currency values as INR ₹ using toLocaleString('en-IN', { style: 'currency', currency: 'INR' }).",
+    "Layout structure: A left sidebar or top nav with Dashboard, Plots, and Settings. Main area uses the 'Control Room' dense Grid.",
+    "Plot Dashboard: Show summary widgets (Total Paid, Pending, Online Total, Cash Total) at the top. Below, a grid of Plot Cards.",
+    "Plot Cards: Must show Plot Name, Total Cost, Total Paid, Pending. Clicking opens a detailed view or side-Sheet for transactions.",
+    "Transactions: Table with Person, Bank (IDFC/SBI/AXIS/Cash), Mode (Online/Cash/UPI/ATM Withdrawal), Type (Plot Payment/Advance/Withdrawal/Registration/Documentation), Amount, Notes. Include Delete functionality.",
+    "Calculations: Plot Cost + Registration Fee = Final Total Cost. Pending = Final Total - Total Paid.",
+    "Strictly follow the color palette to maintain the 'Old Money Tech' Swiss high-contrast aesthetic. Do NOT use default Vercel or Stripe presets without customizing spacing and borders.",
+    "Add 'data-testid' to EVERY form input, button, and table row for automated testing."
+  ]
+}
