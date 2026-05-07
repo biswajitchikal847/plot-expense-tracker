@@ -16,9 +16,16 @@ export const PlotCard = ({ plot, index }) => {
     >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <div className="flex items-center gap-1.5 text-muted-foreground text-xs mb-1.5">
-            <MapPin className="h-3 w-3" />
-            <span className="truncate">{plot.mauja}</span>
+          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+            <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
+              <MapPin className="h-3 w-3" />
+              <span className="truncate">{plot.mauja}</span>
+            </div>
+            {plot.kisam ? (
+              <span className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 text-primary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider">
+                {plot.kisam}
+              </span>
+            ) : null}
           </div>
           <h3 className="font-display font-semibold text-xl tracking-tight truncate">
             {plot.plot_name}

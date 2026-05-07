@@ -25,6 +25,7 @@ api_router = APIRouter(prefix="/api")
 class PlotCreate(BaseModel):
     plot_name: str
     mauja: str
+    kisam: str = "Other"
     plot_size_sqft: float
     buying_price_per_sqft: float
     govt_valuation_per_sqft: float
@@ -37,6 +38,7 @@ class Plot(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     plot_name: str
     mauja: str
+    kisam: str = "Other"
     plot_size_sqft: float
     buying_price_per_sqft: float
     govt_valuation_per_sqft: float
@@ -104,6 +106,17 @@ async def aggregate_plot_paid(plot_id: str) -> float:
     return round(total, 2)
 
 
+async def aggregate_plot_withdrawn(plot_id: str) -> float:
+    cursor = db.transactions.find(
+        {"plot_id": plot_id, "transaction_type": "Withdrawal"},
+        {"_id": 0, "amount": 1}
+    )
+    total = 0.0
+    async for doc in cursor:
+        total += float(doc.get("amount", 0))
+    return round(total, 2)
+
+
 # ============== Routes ==============
 @api_router.get("/")
 async def root():
@@ -126,8 +139,11 @@ async def list_plots():
     plots = await db.plots.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
     enriched = []
     for p in plots:
+        p.setdefault("kisam", "Other")
         paid = await aggregate_plot_paid(p["id"])
+        withdrawn = await aggregate_plot_withdrawn(p["id"])
         p["total_paid"] = paid
+        p["total_withdrawn"] = withdrawn
         p["pending_amount"] = round(p["final_total_cost"] - paid, 2)
         enriched.append(p)
     return enriched
@@ -138,8 +154,11 @@ async def get_plot(plot_id: str):
     p = await db.plots.find_one({"id": plot_id}, {"_id": 0})
     if not p:
         raise HTTPException(status_code=404, detail="Plot not found")
+    p.setdefault("kisam", "Other")
     paid = await aggregate_plot_paid(plot_id)
+    withdrawn = await aggregate_plot_withdrawn(plot_id)
     p["total_paid"] = paid
+    p["total_withdrawn"] = withdrawn
     p["pending_amount"] = round(p["final_total_cost"] - paid, 2)
     return p
 
@@ -179,6 +198,27 @@ async def delete_transaction(txn_id: str):
     return {"success": True}
 
 
+class TransactionUpdate(BaseModel):
+    transaction_type: Optional[Literal["Plot Payment", "Advance", "Withdrawal", "Registration", "Documentation"]] = None
+    payment_mode: Optional[Literal["Online", "Cash", "UPI", "ATM Withdrawal"]] = None
+    bank: Optional[Literal["IDFC", "SBI", "AXIS", "Cash"]] = None
+    person: Optional[str] = None
+    amount: Optional[float] = None
+    notes: Optional[str] = None
+
+
+@api_router.patch("/transactions/{txn_id}", response_model=Transaction)
+async def update_transaction(txn_id: str, payload: TransactionUpdate):
+    existing = await db.transactions.find_one({"id": txn_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    updates = {k: v for k, v in payload.model_dump().items() if v is not None}
+    if updates:
+        await db.transactions.update_one({"id": txn_id}, {"$set": updates})
+    merged = {**existing, **updates}
+    return Transaction(**merged)
+
+
 # --- Dashboard summary ---
 @api_router.get("/dashboard/summary")
 async def dashboard_summary():
@@ -188,6 +228,7 @@ async def dashboard_summary():
     txns = await db.transactions.find({}, {"_id": 0}).to_list(5000)
 
     total_paid = 0.0
+    total_withdrawn = 0.0
     online_total = 0.0
     cash_total = 0.0
     person_totals: dict = {}
@@ -208,6 +249,9 @@ async def dashboard_summary():
             person_totals[person] = round(person_totals.get(person, 0) + amt, 2)
             bank_totals[bank] = round(bank_totals.get(bank, 0) + amt, 2)
 
+        if ttype == "Withdrawal":
+            total_withdrawn += amt
+
         # Online vs Cash buckets (across all txns)
         if mode in ("Online", "UPI"):
             online_total += amt
@@ -220,6 +264,7 @@ async def dashboard_summary():
     return {
         "total_final_cost": round(total_final, 2),
         "total_paid": round(total_paid, 2),
+        "total_withdrawn": round(total_withdrawn, 2),
         "pending_amount": round(total_final - total_paid, 2),
         "online_total": round(online_total, 2),
         "cash_total": round(cash_total, 2),

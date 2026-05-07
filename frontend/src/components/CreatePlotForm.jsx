@@ -3,14 +3,23 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
 import { toast } from 'sonner';
 import { createPlot } from '../services/api';
 import { formatINR } from '../utils/format';
+import { KISAM_OPTIONS } from '../utils/constants';
 import { Loader2, Eraser, Save } from 'lucide-react';
 
 const initialState = {
   plot_name: '',
   mauja: '',
+  kisam: 'Residential',
   plot_size_sqft: '',
   buying_price_per_sqft: '',
   govt_valuation_per_sqft: '',
@@ -60,6 +69,7 @@ export const CreatePlotForm = ({ onCreated }) => {
       const payload = {
         plot_name: form.plot_name.trim(),
         mauja: form.mauja.trim(),
+        kisam: form.kisam || 'Other',
         plot_size_sqft: num(form.plot_size_sqft),
         buying_price_per_sqft: num(form.buying_price_per_sqft),
         govt_valuation_per_sqft: num(form.govt_valuation_per_sqft),
@@ -112,6 +122,27 @@ export const CreatePlotForm = ({ onCreated }) => {
               onChange={update('mauja')}
               placeholder="e.g. Khasra 412, Mauja Bisrakh"
             />
+          </Field>
+          <Field label="Kisam (Land Type)" required>
+            <Select
+              value={form.kisam}
+              onValueChange={(v) => setForm((f) => ({ ...f, kisam: v }))}
+            >
+              <SelectTrigger data-testid="plot-kisam-select">
+                <SelectValue placeholder="Select land type" />
+              </SelectTrigger>
+              <SelectContent>
+                {KISAM_OPTIONS.map((k) => (
+                  <SelectItem
+                    key={k}
+                    value={k}
+                    data-testid={`plot-kisam-option-${k}`}
+                  >
+                    {k}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </Field>
           <Field label="Plot Size (Sq Ft)" required>
             <Input

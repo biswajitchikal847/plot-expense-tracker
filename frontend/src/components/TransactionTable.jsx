@@ -7,11 +7,11 @@ import {
   TableHeader,
   TableRow,
 } from './ui/table';
-import { Trash2 } from 'lucide-react';
+import { Trash2, CircleCheck } from 'lucide-react';
 import { formatINR, formatDate } from '../utils/format';
 import { TYPE_TONES, MODE_TONES } from '../utils/constants';
 
-export const TransactionTable = ({ transactions, onDelete }) => {
+export const TransactionTable = ({ transactions, onDelete, onMarkPaid, emptyText }) => {
   if (!transactions?.length) {
     return (
       <div
@@ -19,7 +19,7 @@ export const TransactionTable = ({ transactions, onDelete }) => {
         data-testid="txn-empty-state"
       >
         <div className="font-display text-lg font-semibold mb-1">
-          No transactions yet
+          {emptyText || 'No transactions yet'}
         </div>
         <p className="text-sm text-muted-foreground">
           Add your first payment using the form above.
@@ -45,7 +45,7 @@ export const TransactionTable = ({ transactions, onDelete }) => {
               <TableHead className="label-overline">Bank</TableHead>
               <TableHead className="label-overline">Notes</TableHead>
               <TableHead className="label-overline text-right">Amount</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
+              <TableHead className="w-[140px] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -75,16 +75,31 @@ export const TransactionTable = ({ transactions, onDelete }) => {
                   {t.transaction_type === 'Withdrawal' ? '-' : '+'}
                   {formatINR(t.amount)}
                 </TableCell>
-                <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-rose-700"
-                    onClick={() => onDelete?.(t)}
-                    data-testid={`txn-delete-${i}`}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                <TableCell className="whitespace-nowrap">
+                  <div className="flex items-center justify-end gap-1">
+                    {onMarkPaid && t.transaction_type === 'Withdrawal' ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-2 text-emerald-800 hover:text-emerald-900 hover:bg-emerald-50"
+                        onClick={() => onMarkPaid(t)}
+                        data-testid={`txn-mark-paid-${i}`}
+                        title="Convert to Plot Payment"
+                      >
+                        <CircleCheck className="h-4 w-4 mr-1" />
+                        Mark Paid
+                      </Button>
+                    ) : null}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-rose-700"
+                      onClick={() => onDelete?.(t)}
+                      data-testid={`txn-delete-${i}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -124,7 +139,18 @@ export const TransactionTable = ({ transactions, onDelete }) => {
             {t.notes ? (
               <div className="mt-2 text-xs text-muted-foreground">{t.notes}</div>
             ) : null}
-            <div className="flex justify-end mt-2">
+            <div className="flex justify-end gap-1 mt-2">
+              {onMarkPaid && t.transaction_type === 'Withdrawal' ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-emerald-800"
+                  onClick={() => onMarkPaid(t)}
+                  data-testid={`txn-mark-paid-mobile-${i}`}
+                >
+                  <CircleCheck className="h-3.5 w-3.5 mr-1" /> Mark Paid
+                </Button>
+              ) : null}
               <Button
                 variant="ghost"
                 size="sm"

@@ -1,3 +1,11 @@
+export const KISAM_OPTIONS = [
+  'Residential',
+  'Commercial',
+  'Agricultural',
+  'Industrial',
+  'Other',
+];
+
 export const BANKS = ['IDFC', 'SBI', 'AXIS', 'Cash'];
 export const PAYMENT_MODES = ['Online', 'Cash', 'UPI', 'ATM Withdrawal'];
 export const TRANSACTION_TYPES = [

@@ -24,6 +24,9 @@ export const listTransactions = (plotId) =>
 export const deleteTransaction = (id) =>
   client.delete(`/transactions/${id}`).then((r) => r.data);
 
+export const updateTransaction = (id, payload) =>
+  client.patch(`/transactions/${id}`, payload).then((r) => r.data);
+
 // Dashboard
 export const getDashboardSummary = () =>
   client.get('/dashboard/summary').then((r) => r.data);

@@ -23,11 +23,18 @@ import {
 import { TransactionForm } from '../components/TransactionForm';
 import { TransactionTable } from '../components/TransactionTable';
 import { StatCard } from '../components/StatCard';
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from '../components/ui/tabs';
 import { useTransactions } from '../hooks/useTransactions';
 import {
   deletePlot,
   deleteTransaction,
   getPlot,
+  updateTransaction,
 } from '../services/api';
 import { formatINR, formatNumber } from '../utils/format';
 import { toast } from 'sonner';
@@ -85,6 +92,19 @@ export default function PlotDetailPage() {
     }
   };
 
+  const handleMarkPaid = async (txn) => {
+    try {
+      await updateTransaction(txn.id, { transaction_type: 'Plot Payment' });
+      toast.success(
+        `Marked ₹${Number(txn.amount).toLocaleString('en-IN')} as Plot Payment`,
+      );
+      await refreshAll();
+    } catch (e) {
+      toast.error('Failed to mark as paid');
+    }
+  };
+
+
   const confirmDeletePlot = async () => {
     try {
       await deletePlot(id);
@@ -132,9 +152,19 @@ export default function PlotDetailPage() {
       <section className="surface-card p-6 sm:p-8" data-testid="plot-detail-header">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-5">
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5 text-muted-foreground text-xs mb-1.5">
-              <MapPin className="h-3 w-3" />
-              <span>{plot.mauja}</span>
+            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+              <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
+                <MapPin className="h-3 w-3" />
+                <span>{plot.mauja}</span>
+              </div>
+              {plot.kisam ? (
+                <span
+                  className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 text-primary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider"
+                  data-testid="plot-detail-kisam"
+                >
+                  {plot.kisam}
+                </span>
+              ) : null}
             </div>
             <h1
               className="font-display text-3xl sm:text-4xl tracking-tight font-bold"
@@ -238,10 +268,73 @@ export default function PlotDetailPage() {
             {transactions.length} entr{transactions.length === 1 ? 'y' : 'ies'}
           </span>
         </div>
-        <TransactionTable
-          transactions={transactions}
-          onDelete={(t) => setDeleteTxn(t)}
-        />
+
+        {(() => {
+          const PAID_TYPES = ['Plot Payment', 'Advance', 'Registration', 'Documentation'];
+          const paidTxns = transactions.filter((t) => PAID_TYPES.includes(t.transaction_type));
+          const withdrawalTxns = transactions.filter((t) => t.transaction_type === 'Withdrawal');
+          const paidTotal = paidTxns.reduce((s, t) => s + Number(t.amount || 0), 0);
+          const withdrawnTotal = withdrawalTxns.reduce((s, t) => s + Number(t.amount || 0), 0);
+
+          return (
+            <Tabs defaultValue="paid" className="space-y-4" data-testid="txn-tabs">
+              <TabsList className="bg-secondary/60 p-1 h-auto">
+                <TabsTrigger
+                  value="paid"
+                  className="data-[state=active]:bg-card data-[state=active]:shadow-sm px-4 py-2"
+                  data-testid="tab-paid"
+                >
+                  <span className="font-medium">Paid</span>
+                  <span className="ml-2 tabular text-xs text-muted-foreground">
+                    ({paidTxns.length})
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="withdrawals"
+                  className="data-[state=active]:bg-card data-[state=active]:shadow-sm px-4 py-2"
+                  data-testid="tab-withdrawals"
+                >
+                  <span className="font-medium">Withdrawals</span>
+                  <span className="ml-2 tabular text-xs text-muted-foreground">
+                    ({withdrawalTxns.length})
+                  </span>
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="paid" className="space-y-4 mt-0">
+                <TabSummary
+                  label="Total Paid"
+                  amount={paidTotal}
+                  count={paidTxns.length}
+                  tone="paid"
+                  testId="paid-summary"
+                />
+                <TransactionTable
+                  transactions={paidTxns}
+                  onDelete={(t) => setDeleteTxn(t)}
+                  emptyText="No paid transactions yet"
+                />
+              </TabsContent>
+
+              <TabsContent value="withdrawals" className="space-y-4 mt-0">
+                <TabSummary
+                  label="Total Withdrawn"
+                  amount={withdrawnTotal}
+                  count={withdrawalTxns.length}
+                  tone="withdrawal"
+                  testId="withdrawn-summary"
+                  hint="Use Mark Paid to convert into a Plot Payment"
+                />
+                <TransactionTable
+                  transactions={withdrawalTxns}
+                  onDelete={(t) => setDeleteTxn(t)}
+                  onMarkPaid={handleMarkPaid}
+                  emptyText="No withdrawals yet"
+                />
+              </TabsContent>
+            </Tabs>
+          );
+        })()}
       </section>
 
       {/* Per-plot breakdowns */}
@@ -352,6 +445,36 @@ const MiniBreakdown = ({ title, data, testId }) => {
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+};
+
+
+const TabSummary = ({ label, amount, count, tone, hint, testId }) => {
+  const accent =
+    tone === 'paid'
+      ? 'border-l-emerald-700'
+      : tone === 'withdrawal'
+      ? 'border-l-amber-600'
+      : 'border-l-primary';
+  return (
+    <div
+      className={`surface-card border-l-4 ${accent} p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3`}
+      data-testid={testId}
+    >
+      <div className="flex flex-col gap-1">
+        <span className="label-overline">{label}</span>
+        <span className="tabular text-2xl sm:text-3xl font-semibold tracking-tight">
+          {formatINR(amount)}
+        </span>
+        {hint ? (
+          <span className="text-xs text-muted-foreground">{hint}</span>
+        ) : null}
+      </div>
+      <div className="text-right">
+        <span className="label-overline text-[10px]">Count</span>
+        <div className="tabular text-xl font-semibold mt-1">{count}</div>
       </div>
     </div>
   );
