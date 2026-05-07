@@ -152,7 +152,7 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6">
-            {plots.map((p, i) => (
+            {plots?.map((p, i) => (
               <PlotCard key={p.id} plot={p} index={i} />
             ))}
           </div>
