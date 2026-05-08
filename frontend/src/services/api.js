@@ -1,7 +1,8 @@
 import axios from 'axios';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-export const API = `${BACKEND_URL}/api`;
+const DEFAULT_BACKEND_URL = 'https://plot-expense-tracker.onrender.com';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || DEFAULT_BACKEND_URL;
+export const API = `${BACKEND_URL.replace(/\/$/, '')}/api`;
 
 const client = axios.create({
   baseURL: API,
