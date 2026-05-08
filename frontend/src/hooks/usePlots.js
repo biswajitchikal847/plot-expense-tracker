@@ -11,7 +11,7 @@ export const usePlots = () => {
     setError(null);
     try {
       const data = await listPlots();
-      setPlots(data);
+      setPlots(Array.isArray(data) ? data : data?.plots || []);
     } catch (e) {
       setError(e?.message || 'Failed to load plots');
     } finally {
